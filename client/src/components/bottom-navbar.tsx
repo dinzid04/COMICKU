@@ -18,7 +18,7 @@ export function BottomNavbar() {
             <span className="text-xs">Beranda</span>
           </Link>
           <a
-            href="animaqu.dinzid.biz.id"
+            href="https://animaqu.dinzid.biz.id"
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1 p-2 rounded-lg text-muted-foreground transition-colors"
