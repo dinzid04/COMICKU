@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, BookOpen, Moon, Sun, Menu, X } from "lucide-react";
+import { Search, BookOpen, Moon, Sun, Menu, X, Heart, History, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/hooks/authProvider";
+import { signOut } from "firebase/auth";
+import { auth } from "@/firebaseConfig";
 
 export function Header() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +26,11 @@ export function Header() {
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/");
   };
 
   return (
@@ -57,13 +66,37 @@ export function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
-            <Link 
-              href="/genres" 
-              data-testid="link-genres"
+            <Link
+              href="/history"
+              data-testid="link-history"
               className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2"
             >
-              Genre
+              <History className="h-4 w-4" /> History
             </Link>
+            <Link
+              href="/favorites"
+              data-testid="link-favorites"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2"
+            >
+              <Heart className="h-4 w-4" /> Favorites
+            </Link>
+            {user ? (
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2"
+              >
+                <LogOut className="h-4 w-4" /> Logout
+              </Button>
+            ) : (
+              <Link
+                href="/login"
+                data-testid="link-login"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-8 px-4 py-2 hover-elevate active-elevate-2"
+              >
+                <LogIn className="h-4 w-4" /> Login
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -104,14 +137,43 @@ export function Header() {
               </div>
             </form>
             <div className="flex flex-col gap-2">
-              <Link 
-                href="/genres" 
-                data-testid="link-genres-mobile"
+              <Link
+                href="/history"
+                data-testid="link-history-mobile"
                 onClick={() => setMobileMenuOpen(false)}
                 className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2"
               >
-                Genre
+                <History className="h-4 w-4" /> History
               </Link>
+              <Link
+                href="/favorites"
+                data-testid="link-favorites-mobile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2"
+              >
+                <Heart className="h-4 w-4" /> Favorites
+              </Link>
+              {user ? (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="justify-start hover-elevate active-elevate-2"
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Logout
+                </Button>
+              ) : (
+                <Link
+                  href="/login"
+                  data-testid="link-login-mobile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2"
+                >
+                  <LogIn className="h-4 w-4" /> Login
+                </Link>
+              )}
               <Button
                 variant="ghost"
                 onClick={() => {
