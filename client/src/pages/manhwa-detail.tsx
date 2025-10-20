@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { Star, Calendar, User, Book, Tag, ExternalLink, Loader2, AlertCircle } from "lucide-react";
+import { Star, Calendar, User, Book, Tag, ExternalLink, Loader2, AlertCircle, Heart } from "lucide-react";
 import { api, extractChapterId } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/seo";
+import React, { useEffect } from "react";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useHistory } from "@/hooks/useHistory";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
@@ -15,6 +18,53 @@ export default function ManhwaDetail() {
     queryFn: () => api.getManhwaDetail(manhwaId),
     enabled: !!manhwaId,
   });
+
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { addToHistory } = useHistory();
+
+  useEffect(() => {
+    if (data) {
+      const manhwaListItem = {
+        id: manhwaId,
+        title: data.title,
+        imageSrc: data.imageSrc,
+        type: data.type,
+      };
+      addToHistory(manhwaListItem);
+    }
+  }, [data, manhwaId, addToHistory]);
+
+  const handleFavoriteToggle = () => {
+    if (!data) return;
+    const manhwaListItem = {
+      id: manhwaId,
+      title: data.title,
+      imageSrc: data.imageSrc,
+      type: data.type,
+    };
+    if (isFavorite(manhwaId)) {
+      removeFavorite(manhwaId);
+    } else {
+      addFavorite(manhwaListItem);
+    }
+  };
+
+  const sortedChapters = React.useMemo(() => {
+    if (!data?.chapters) return [];
+
+    const getChapterNumber = (chapterNum: string): number => {
+      const match = chapterNum.match(/(\d+(\.\d+)?)/);
+      return match ? parseFloat(match[1]) : 0;
+    };
+
+    return [...data.chapters].sort((a, b) => {
+      const numA = getChapterNumber(a.chapterNum);
+      const numB = getChapterNumber(b.chapterNum);
+      return numB - numA;
+    });
+  }, [data?.chapters]);
+
+  const firstChapter = sortedChapters.length > 0 ? sortedChapters[sortedChapters.length - 1] : null;
 
   if (isLoading) {
     return (
@@ -131,17 +181,28 @@ export default function ManhwaDetail() {
                 </p>
               </div>
 
-              {/* Read Button */}
-              {data.firstChapter?.link && (
-                <Link 
-                  href={`/chapter/${extractChapterId(data.firstChapter.link)}`}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-10 px-8" 
-                  data-testid="button-read-first"
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-4">
+                {firstChapter?.chapterLink && (
+                  <Link
+                    href={`/chapter/${extractChapterId(firstChapter.chapterLink)}`}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-10 px-8"
+                    data-testid="button-read-first"
+                  >
+                    <Book className="h-5 w-5" />
+                    Baca Chapter Pertama
+                  </Link>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={handleFavoriteToggle}
+                  className="gap-2"
+                  data-testid="button-favorite"
                 >
-                  <Book className="h-5 w-5" />
-                  Baca Chapter Pertama
-                </Link>
-              )}
+                  <Heart className={`h-5 w-5 ${isFavorite(manhwaId) ? "fill-red-500 text-red-500" : ""}`} />
+                  {isFavorite(manhwaId) ? "Favorited" : "Favorite"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -151,13 +212,13 @@ export default function ManhwaDetail() {
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <h2 className="font-display text-2xl font-bold mb-6">Daftar Chapter</h2>
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          {data.chapters && data.chapters.length > 0 ? (
+          {sortedChapters.length > 0 ? (
             <div className="divide-y divide-border">
-              {data.chapters.map((chapter, index) => {
+              {sortedChapters.map((chapter) => {
                 const chapterId = extractChapterId(chapter.chapterLink);
                 return (
-                  <Link 
-                    key={index} 
+                  <Link
+                    key={chapterId}
                     href={`/chapter/${chapterId}`}
                     className="flex items-center justify-between p-4 hover-elevate active-elevate-2 transition-all"
                     data-testid={`link-chapter-${chapterId}`}
