@@ -2,26 +2,34 @@ import { Link } from "wouter";
 import { Star, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { extractManhwaId } from "@/lib/api";
+import { ManhwaListItem } from "@shared/types";
 
-interface ManhwaCardProps {
+interface ManhwaCardProps extends Partial<ManhwaListItem> {
   title: string;
-  image: string;
-  link: string;
+  image?: string;
+  imageSrc?: string;
+  link?: string;
+  id?: string;
   rating?: string;
   chapter?: string;
   latestChapter?: string;
 }
 
-export function ManhwaCard({ title, image, link, rating, chapter, latestChapter }: ManhwaCardProps) {
-  const manhwaId = extractManhwaId(link);
+export function ManhwaCard({ title, image, imageSrc, link, id, rating, chapter, latestChapter }: ManhwaCardProps) {
+  const manhwaId = id || (link ? extractManhwaId(link) : '');
   const displayChapter = chapter || latestChapter;
+  const imageUrl = image || imageSrc;
+
+  if (!manhwaId || !imageUrl) {
+    return <ManhwaCardSkeleton />;
+  }
 
   return (
     <Link href={`/manhwa/${manhwaId}`} data-testid={`card-manhwa-${manhwaId}`} className="group block">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
           {/* Image */}
           <img
-            src={image}
+            src={imageUrl}
             alt={title}
             className="h-full w-full object-cover"
             loading="lazy"

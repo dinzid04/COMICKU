@@ -15,7 +15,7 @@ export default function History() {
       {history.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {history.map((manhwa) => (
-            <ManhwaCard key={manhwa.id} manhwa={manhwa} />
+            <ManhwaCard key={manhwa.id} {...manhwa} />
           ))}
         </div>
       ) : (
