@@ -18,7 +18,7 @@ interface ManhwaCardProps extends Partial<ManhwaListItem> {
 export function ManhwaCard({ title, image, imageSrc, link, id, rating, chapter, latestChapter }: ManhwaCardProps) {
   const manhwaId = id || (link ? extractManhwaId(link) : '');
   const displayChapter = chapter || latestChapter;
-  const imageUrl = image || imageSrc;
+  const imageUrl = imageSrc || image;
 
   if (!manhwaId || !imageUrl) {
     return <ManhwaCardSkeleton />;
