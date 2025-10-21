@@ -10,7 +10,7 @@ import { db } from "@/firebaseConfig";
 import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
