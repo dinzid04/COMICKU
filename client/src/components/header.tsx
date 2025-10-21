@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, BookOpen, Moon, Sun, Menu, X } from "lucide-react";
+import { Search, BookOpen, Moon, Sun, Menu, X, Heart, History, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
+import { useAuth } from "@/hooks/use-auth";
+import { auth } from "@/firebaseConfig";
+import { signOut } from "firebase/auth";
 
 export function Header() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,6 +26,12 @@ export function Header() {
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    navigate("/");
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -64,6 +74,25 @@ export function Header() {
             >
               Genre
             </Link>
+            {user ? (
+              <>
+                <Link href="/favorites" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2">
+                  <Heart className="h-4 w-4" /> Favorit
+                </Link>
+                <Link href="/history" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2">
+                  <History className="h-4 w-4" /> Riwayat
+                </Link>
+                <Button variant="ghost" onClick={handleLogout} className="hover-elevate active-elevate-2">
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Link href="/auth" data-testid="link-login">
+                <Button className="hover-elevate active-elevate-2">
+                  <LogIn className="mr-2 h-4 w-4" /> Login
+                </Button>
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -104,14 +133,24 @@ export function Header() {
               </div>
             </form>
             <div className="flex flex-col gap-2">
-              <Link 
-                href="/genres" 
+              <Link
+                href="/genres"
                 data-testid="link-genres-mobile"
                 onClick={() => setMobileMenuOpen(false)}
                 className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2"
               >
                 Genre
               </Link>
+              {user ? (
+                <>
+                  <Link href="/favorites" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
+                    <Heart className="mr-2 h-5 w-5" /> Favorit
+                  </Link>
+                  <Link href="/history" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
+                    <History className="mr-2 h-5 w-5" /> Riwayat
+                  </Link>
+                </>
+              ) : null}
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -131,6 +170,15 @@ export function Header() {
                   </>
                 )}
               </Button>
+              {user ? (
+                <Button variant="ghost" onClick={handleLogout} className="justify-start hover-elevate active-elevate-2 text-red-500 hover:text-red-600">
+                  <LogOut className="mr-2 h-5 w-5" /> Logout
+                </Button>
+              ) : (
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
+                  <LogIn className="mr-2 h-5 w-5" /> Login
+                </Link>
+              )}
             </div>
           </div>
         )}

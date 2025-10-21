@@ -5,9 +5,13 @@ import { api, extractChapterId } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { SEO } from "@/components/seo";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function ChapterReader() {
   const [, params] = useRoute("/chapter/:id");
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const chapterId = params?.id || "";
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
@@ -18,10 +22,29 @@ export default function ChapterReader() {
     enabled: !!chapterId,
   });
 
-  // Scroll to top when chapter changes
+  // Scroll to top when chapter changes and save history
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [chapterId]);
+
+    if (user && data?.manhwaId && data.manhwaImage && data.manhwaTitle) {
+      const saveHistory = async () => {
+        const historyRef = doc(db, "users", user.uid, "history", data.manhwaId);
+        try {
+          await setDoc(historyRef, {
+            manhwaId: data.manhwaId,
+            manhwaTitle: data.manhwaTitle,
+            manhwaImage: data.manhwaImage,
+            lastChapterId: chapterId,
+            lastChapterTitle: data.title,
+            readAt: new Date(),
+          }, { merge: true });
+        } catch (error) {
+          console.error("Error saving history:", error);
+        }
+      };
+      saveHistory();
+    }
+  }, [chapterId, user, data]);
 
   const handleImageError = (index: number) => {
     setImageLoadErrors(prev => new Set(prev).add(index));

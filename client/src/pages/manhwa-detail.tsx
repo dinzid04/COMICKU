@@ -5,16 +5,62 @@ import { api, extractChapterId } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/seo";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/firebaseConfig";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
   const manhwaId = params?.id || "";
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["/api/manhwa-detail", manhwaId],
     queryFn: () => api.getManhwaDetail(manhwaId),
     enabled: !!manhwaId,
   });
+
+  useEffect(() => {
+    if (!user || !data) return;
+    const checkFavorite = async () => {
+      const docRef = doc(db, "users", user.uid, "favorites", manhwaId);
+      const docSnap = await getDoc(docRef);
+      setIsFavorite(docSnap.exists());
+    };
+    checkFavorite();
+  }, [user, data, manhwaId]);
+
+  const toggleFavorite = async () => {
+    if (!user || !data) {
+      toast({ title: "Login Required", description: "You need to be logged in to add favorites.", variant: "destructive" });
+      return;
+    }
+
+    const docRef = doc(db, "users", user.uid, "favorites", manhwaId);
+
+    try {
+      if (isFavorite) {
+        await deleteDoc(docRef);
+        toast({ title: "Removed from Favorites" });
+      } else {
+        await setDoc(docRef, {
+          id: manhwaId,
+          title: data.title,
+          image: data.imageSrc,
+          addedAt: new Date(),
+        });
+        toast({ title: "Added to Favorites" });
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -39,6 +85,16 @@ export default function ManhwaDetail() {
       </div>
     );
   }
+
+  const sortedChapters = data.chapters
+    ? [...data.chapters].sort((a, b) => {
+        const numA = parseFloat(a.chapterNum.replace(/[^0-9.]/g, ''));
+        const numB = parseFloat(b.chapterNum.replace(/[^0-9.]/g, ''));
+        return numA - numB;
+      })
+    : [];
+
+  const firstChapterLink = sortedChapters.length > 0 ? sortedChapters[0].chapterLink : data.firstChapter?.link;
 
   return (
     <div className="min-h-screen">
@@ -132,15 +188,26 @@ export default function ManhwaDetail() {
               </div>
 
               {/* Read Button */}
-              {data.firstChapter?.link && (
-                <Link 
-                  href={`/chapter/${extractChapterId(data.firstChapter.link)}`}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-10 px-8" 
+              {firstChapterLink && (
+                <Link
+                  href={`/chapter/${extractChapterId(firstChapterLink)}`}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-10 px-8"
                   data-testid="button-read-first"
                 >
                   <Book className="h-5 w-5" />
                   Baca Chapter Pertama
                 </Link>
+              )}
+              {user && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={toggleFavorite}
+                  className="ml-4"
+                  aria-label="Toggle Favorite"
+                >
+                  <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                </Button>
               )}
             </div>
           </div>
@@ -151,13 +218,13 @@ export default function ManhwaDetail() {
       <div className="container mx-auto max-w-7xl px-4 py-12">
         <h2 className="font-display text-2xl font-bold mb-6">Daftar Chapter</h2>
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          {data.chapters && data.chapters.length > 0 ? (
+          {sortedChapters.length > 0 ? (
             <div className="divide-y divide-border">
-              {data.chapters.map((chapter, index) => {
+              {sortedChapters.map((chapter, index) => {
                 const chapterId = extractChapterId(chapter.chapterLink);
                 return (
-                  <Link 
-                    key={index} 
+                  <Link
+                    key={index}
                     href={`/chapter/${chapterId}`}
                     className="flex items-center justify-between p-4 hover-elevate active-elevate-2 transition-all"
                     data-testid={`link-chapter-${chapterId}`}

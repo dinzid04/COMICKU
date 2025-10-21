@@ -15,12 +15,18 @@ import GenresPage from "@/pages/genres";
 import GenreDetail from "@/pages/genre-detail";
 import ManhwaDetail from "@/pages/manhwa-detail";
 import ChapterReader from "@/pages/chapter-reader";
+import AuthPage from "@/pages/auth";
+import FavoritesPage from "@/pages/favorites";
+import HistoryPage from "@/pages/history";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/auth" component={AuthPage} />
+      <Route path="/favorites" component={FavoritesPage} />
+      <Route path="/history" component={HistoryPage} />
       <Route path="/search/:query" component={SearchPage} />
       <Route path="/genres" component={GenresPage} />
       <Route path="/genre/:id" component={GenreDetail} />
@@ -31,12 +37,15 @@ function Router() {
   );
 }
 
+import { AuthProvider } from "@/hooks/use-auth";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="manhwaku-theme">
-        <TooltipProvider>
-          <div className="flex flex-col min-h-screen">
+        <AuthProvider>
+          <TooltipProvider>
+            <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-1 pb-16 md:pb-0">
               <Router />
@@ -46,6 +55,7 @@ function App() {
           </div>
           <Toaster />
         </TooltipProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
