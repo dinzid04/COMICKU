@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Star, Calendar, User, Book, Tag, ExternalLink, Loader2, AlertCircle, Heart } from "lucide-react";
 import { api, extractChapterId } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,10 @@ import { useHistory } from "@/hooks/useHistory";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
+  const [location] = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const fallbackImage = searchParams.get("image");
+
   const manhwaId = params?.id || "";
 
   const { data, isLoading, error } = useQuery({
@@ -18,6 +22,8 @@ export default function ManhwaDetail() {
     queryFn: () => api.getManhwaDetail(manhwaId),
     enabled: !!manhwaId,
   });
+
+  const imageUrl = data?.imageSrc || fallbackImage;
 
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { addToHistory } = useHistory();
@@ -27,19 +33,19 @@ export default function ManhwaDetail() {
       const manhwaListItem = {
         id: manhwaId,
         title: data.title,
-        imageSrc: data.imageSrc,
+        imageSrc: imageUrl || "",
         type: data.type,
       };
       addToHistory(manhwaListItem);
     }
-  }, [data, manhwaId, addToHistory]);
+  }, [data, manhwaId, addToHistory, imageUrl]);
 
   const handleFavoriteToggle = () => {
     if (!data) return;
     const manhwaListItem = {
       id: manhwaId,
       title: data.title,
-      imageSrc: data.imageSrc,
+      imageSrc: imageUrl || "",
       type: data.type,
     };
     if (isFavorite(manhwaId)) {
@@ -95,7 +101,7 @@ export default function ManhwaDetail() {
       <SEO
         title={data.title}
         description={data.synopsis.slice(0, 160) + "..."}
-        image={data.imageSrc}
+        image={imageUrl || ""}
       />
       {/* Hero Section with Cover */}
       <div className="bg-gradient-to-b from-card to-background border-b border-border">
@@ -105,7 +111,7 @@ export default function ManhwaDetail() {
             <div className="flex-shrink-0">
               <div className="w-64 mx-auto md:mx-0">
                 <img
-                  src={data.imageSrc}
+                  src={imageUrl || ""}
                   alt={data.title}
                   className="w-full rounded-lg shadow-xl"
                   onError={(e) => {

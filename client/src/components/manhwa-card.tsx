@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Star, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { extractManhwaId } from "@/lib/api";
@@ -16,6 +16,7 @@ interface ManhwaCardProps extends Partial<ManhwaListItem> {
 }
 
 export function ManhwaCard({ title, image, imageSrc, link, id, rating, chapter, latestChapter }: ManhwaCardProps) {
+  const [, navigate] = useLocation();
   const manhwaId = id || (link ? extractManhwaId(link) : '');
   const displayChapter = chapter || latestChapter;
   const imageUrl = imageSrc || image;
@@ -24,8 +25,12 @@ export function ManhwaCard({ title, image, imageSrc, link, id, rating, chapter, 
     return <ManhwaCardSkeleton />;
   }
 
+  const handleClick = () => {
+    navigate(`/manhwa/${manhwaId}?image=${encodeURIComponent(imageUrl || "")}`);
+  };
+
   return (
-    <Link href={`/manhwa/${manhwaId}`} data-testid={`card-manhwa-${manhwaId}`} className="group block">
+    <div onClick={handleClick} data-testid={`card-manhwa-${manhwaId}`} className="group block cursor-pointer">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
           {/* Image */}
           <img
@@ -65,7 +70,7 @@ export function ManhwaCard({ title, image, imageSrc, link, id, rating, chapter, 
       <h3 className="mt-3 font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
         {title}
       </h3>
-    </Link>
+    </div>
   );
 }
 
