@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Star, Calendar, User, Book, Tag, ExternalLink, Loader2, AlertCircle } from "lucide-react";
 import { api, extractChapterId } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
+  const [location] = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const fallbackImage = searchParams.get("image");
+
   const manhwaId = params?.id || "";
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,7 +55,7 @@ export default function ManhwaDetail() {
         await setDoc(docRef, {
           id: manhwaId,
           title: data.title,
-          image: data.imageSrc,
+          image: displayImage,
           addedAt: new Date(),
         });
         toast({ title: "Added to Favorites" });
@@ -86,6 +90,9 @@ export default function ManhwaDetail() {
     );
   }
 
+  // Handle inconsistent image property names and fallback to query param
+  const displayImage = data.imageSrc || (data as any).image || fallbackImage;
+
   const sortedChapters = data.chapters
     ? [...data.chapters].sort((a, b) => {
         const numA = parseFloat(a.chapterNum.replace(/[^0-9.]/g, ''));
@@ -101,7 +108,7 @@ export default function ManhwaDetail() {
       <SEO
         title={data.title}
         description={data.synopsis.slice(0, 160) + "..."}
-        image={data.imageSrc}
+        image={displayImage}
       />
       {/* Hero Section with Cover */}
       <div className="bg-gradient-to-b from-card to-background border-b border-border">
@@ -111,7 +118,7 @@ export default function ManhwaDetail() {
             <div className="flex-shrink-0">
               <div className="w-64 mx-auto md:mx-0">
                 <img
-                  src={data.imageSrc}
+                  src={displayImage}
                   alt={data.title}
                   className="w-full rounded-lg shadow-xl"
                   onError={(e) => {

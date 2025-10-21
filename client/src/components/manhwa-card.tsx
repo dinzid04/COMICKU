@@ -17,7 +17,7 @@ export function ManhwaCard({ title, image, link, rating, chapter, latestChapter 
   const displayChapter = chapter || latestChapter;
 
   return (
-    <Link href={`/manhwa/${manhwaId}`} data-testid={`card-manhwa-${manhwaId}`} className="group block">
+    <Link href={`/manhwa/${manhwaId}?image=${encodeURIComponent(image)}`} data-testid={`card-manhwa-${manhwaId}`} className="group block">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
           {/* Image */}
           <img
