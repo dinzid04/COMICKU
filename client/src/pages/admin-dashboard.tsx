@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,9 +8,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLocation } from "wouter";
+import { Spinner } from "@/components/ui/spinner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
-// Skema baru untuk validasi form quote
 const quoteSectionSchema = z.object({
   quote: z.string().min(1, "Kutipan tidak boleh kosong"),
   author: z.string().min(1, "Nama author tidak boleh kosong"),
@@ -20,9 +21,9 @@ const quoteSectionSchema = z.object({
 type QuoteSectionFormData = z.infer<typeof quoteSectionSchema>;
 
 const AdminDashboard = () => {
-  const { user, loading, isAdmin: isGlobalAdmin } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [, navigate] = useLocation();
+  const { user, loading, isAdmin, needsSetup, recheckAdminStatus } = useAuth();
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isSettingUp, setIsSettingUp] = useState(false);
 
   const {
     register,
@@ -33,38 +34,61 @@ const AdminDashboard = () => {
     resolver: zodResolver(quoteSectionSchema),
   });
 
-  useEffect(() => {
-    // Jika loading auth selesai dan user bukan admin, tendang ke homepage
-    if (!loading && !isGlobalAdmin) {
-      navigate("/");
-      return;
+  const fetchQuoteData = useCallback(async () => {
+    try {
+      setIsDataLoading(true);
+      const settingsDocRef = doc(db, "dashboard", "settings");
+      const docSnap = await getDoc(settingsDocRef);
+      if (docSnap.exists() && docSnap.data()?.quoteSection) {
+        reset(docSnap.data().quoteSection);
+      }
+    } catch (error) {
+      console.error("Error fetching quote data:", error);
+    } finally {
+      setIsDataLoading(false);
     }
+  }, [reset]);
 
-    // Jika user admin, ambil data quote untuk ditampilkan di form
-    if (isGlobalAdmin) {
-      const fetchQuoteData = async () => {
+  useEffect(() => {
+    const initializeSettings = async () => {
+      if (needsSetup && user) {
+        setIsSettingUp(true);
+        const settingsDocRef = doc(db, "dashboard", "settings");
+        const defaultSettings = {
+          admins: [user.uid],
+          quoteSection: {
+            quote: "Persahabatan itu adalah tempat saling berbagi rasa sakit.",
+            author: "Yoimiya",
+            authorImageUrl: "https://cdn.nefyu.my.id/030i.jpeg",
+          },
+        };
+
         try {
-          const settingsDocRef = doc(db, "dashboard", "settings");
-          const docSnap = await getDoc(settingsDocRef);
-          if (docSnap.exists() && docSnap.data()?.quoteSection) {
-            reset(docSnap.data().quoteSection); // Set nilai default form
-          }
+          await setDoc(settingsDocRef, defaultSettings);
+          await recheckAdminStatus();
+          await fetchQuoteData();
         } catch (error) {
-          console.error("Error fetching quote data:", error);
+          console.error("Error initializing settings:", error);
         } finally {
-          setIsLoading(false);
+          setIsSettingUp(false);
         }
-      };
+      }
+    };
+
+    initializeSettings();
+  }, [needsSetup, user, recheckAdminStatus, fetchQuoteData]);
+
+  useEffect(() => {
+    if (isAdmin) {
       fetchQuoteData();
-    } else if (!loading) {
-        setIsLoading(false);
+    } else {
+      setIsDataLoading(false);
     }
-  }, [user, loading, isGlobalAdmin, navigate, reset]);
+  }, [isAdmin, fetchQuoteData]);
 
   const onSubmit = async (data: QuoteSectionFormData) => {
     try {
       const settingsDocRef = doc(db, "dashboard", "settings");
-      // Gunakan setDoc dengan merge:true untuk hanya memperbarui field quoteSection
       await setDoc(settingsDocRef, { quoteSection: data }, { merge: true });
       alert("Bagian kutipan berhasil diperbarui!");
     } catch (error) {
@@ -73,12 +97,39 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading || isLoading) {
-    return <div className="container mx-auto p-4">Memuat dasbor...</div>;
+  if (loading || isDataLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner size="large" />
+      </div>
+    );
   }
 
-  if (!isGlobalAdmin) {
-    return null; // Pengguna akan diarahkan oleh useEffect
+  if (isSettingUp) {
+    return (
+      <div className="container mx-auto p-4 flex flex-col items-center justify-center h-full">
+        <Spinner size="large" />
+        <p className="mt-4 text-lg">Melakukan pengaturan awal...</p>
+      </div>
+    );
+  }
+
+  if (needsSetup) {
+    return (
+      <div className="container mx-auto p-4">
+        <Alert>
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>Pengaturan Diperlukan</AlertTitle>
+          <AlertDescription>
+            Selamat datang! Ini adalah pertama kalinya Anda menjalankan aplikasi. Pengaturan awal sedang diproses. Anda akan menjadi admin pertama secara otomatis.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null; // Pengguna akan diarahkan oleh komponen AdminRoute
   }
 
   return (

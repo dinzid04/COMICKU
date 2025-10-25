@@ -42,23 +42,14 @@ Ikuti langkah-langkah di bawah ini untuk menghubungkan aplikasi ini ke Firebase.
 1.  Buka **Build > Firestore Database**.
 2.  Klik **"Create database"** dan mulai dalam **Production mode**.
 
-### Langkah 5: Buat Dokumen Pengaturan Awal & Konfigurasi Admin
+### Langkah 5: Inisialisasi Admin & Pengaturan Otomatis
 
-Anda perlu membuat dokumen pengaturan secara manual untuk pertama kali.
+Aplikasi ini sekarang memiliki fitur inisialisasi otomatis. Anda tidak perlu lagi membuat dokumen `settings` secara manual.
 
-1.  Di Firestore, buat koleksi baru bernama `dashboard`.
-2.  Di dalamnya, buat dokumen dengan ID `settings`.
-3.  Tambahkan *field* berikut ke dokumen `settings`:
-    *   **Field 1: `admins`**
-        *   **Type**: `array`
-        *   **Value**: Tambahkan Firebase UID dari akun admin Anda.
-    *   **Field 2: `quoteSection`**
-        *   **Type**: `map`
-        *   Di dalam `map` ini, tambahkan tiga *field* berikut:
-            *   `quote` (string): `Persahabatan itu adalah tempat saling berbagi rasa sakit.`
-            *   `author` (string): `Yoimiya`
-            *   `authorImageUrl` (string): `https://cdn.nefyu.my.id/030i.jpeg`
-4.  Klik **"Save"**.
+1.  Setelah menyelesaikan semua langkah setup lainnya, jalankan aplikasi.
+2.  Daftarkan akun baru atau login dengan akun yang sudah ada. Akun ini akan menjadi **admin pertama**.
+3.  Kunjungi halaman `/admin`.
+4.  Aplikasi akan secara otomatis membuat dokumen `settings` yang diperlukan di Firestore, menambahkan UID Anda ke daftar admin, dan mengisi bagian kutipan dengan data default.
 
 ### Langkah 6: Atur Aturan Keamanan (Security Rules)
 
