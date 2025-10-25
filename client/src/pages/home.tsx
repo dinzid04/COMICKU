@@ -75,18 +75,24 @@ export default function Home() {
 
       {/* Quote Section */}
       {settings.quote && (
-        <section className="text-center my-16">
-          <img
-            src={settings.imageUrl || "https://via.placeholder.com/150"}
-            alt={settings.author || "Author"}
-            className="w-24 h-24 rounded-full mx-auto mb-4"
-          />
-          <p className="text-xl md:text-2xl font-serif italic text-foreground max-w-3xl mx-auto">
-            "{settings.quote}"
-          </p>
-          <p className="text-lg text-muted-foreground mt-4 font-semibold">
-            - {settings.author}
-          </p>
+        <section className="my-8">
+            <div className="container mx-auto max-w-7xl px-4">
+                <div className="bg-card text-card-foreground rounded-lg p-4 flex items-center gap-4">
+                    <img
+                        src={settings.imageUrl || "https://via.placeholder.com/150"}
+                        alt={settings.author || "Author"}
+                        className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                    />
+                    <div>
+                        <p className="italic text-foreground">
+                            "{settings.quote}"
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            - {settings.author}
+                        </p>
+                    </div>
+                </div>
+            </div>
         </section>
       )}
 
