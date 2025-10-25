@@ -46,6 +46,17 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto max-w-7xl">
         <div className="flex h-16 items-center justify-between gap-4 px-4">
+          {/* Logo */}
+          <Link
+            href="/"
+            data-testid="link-home"
+            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-lg px-3 py-2 transition-all"
+          >
+            <BookOpen className="h-6 w-6 text-primary" />
+            <span className="font-display text-xl font-bold tracking-tight">
+              COMIC KU
+            </span>
+          </Link>
 
           {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-md relative">

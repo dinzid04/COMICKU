@@ -10,17 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 
-const welcomeMessageSchema = z.object({
-  imageUrl: z.string().url("URL gambar tidak valid"),
-  title: z.string().min(1, "Judul tidak boleh kosong"),
-  subtitle: z.string().min(1, "Subjudul tidak boleh kosong"),
+// Skema baru untuk validasi form quote
+const quoteSectionSchema = z.object({
+  quote: z.string().min(1, "Kutipan tidak boleh kosong"),
+  author: z.string().min(1, "Nama author tidak boleh kosong"),
+  authorImageUrl: z.string().url("URL gambar author tidak valid"),
 });
 
-type WelcomeMessageFormData = z.infer<typeof welcomeMessageSchema>;
+type QuoteSectionFormData = z.infer<typeof quoteSectionSchema>;
 
 const AdminDashboard = () => {
-  const { user, loading } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, loading, isAdmin: isGlobalAdmin } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [, navigate] = useLocation();
 
@@ -29,81 +29,77 @@ const AdminDashboard = () => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<WelcomeMessageFormData>({
-    resolver: zodResolver(welcomeMessageSchema),
+  } = useForm<QuoteSectionFormData>({
+    resolver: zodResolver(quoteSectionSchema),
   });
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (loading) return;
-      if (!user) {
-        navigate("/");
-        return;
-      }
+    // Jika loading auth selesai dan user bukan admin, tendang ke homepage
+    if (!loading && !isGlobalAdmin) {
+      navigate("/");
+      return;
+    }
 
-      try {
-        const settingsDocRef = doc(db, "dashboard", "settings");
-        const docSnap = await getDoc(settingsDocRef);
-
-        if (docSnap.exists()) {
-          const admins = docSnap.data()?.admins || [];
-          if (admins.includes(user.uid)) {
-            setIsAdmin(true);
-            reset(docSnap.data()?.welcomeMessage);
-          } else {
-            navigate("/");
+    // Jika user admin, ambil data quote untuk ditampilkan di form
+    if (isGlobalAdmin) {
+      const fetchQuoteData = async () => {
+        try {
+          const settingsDocRef = doc(db, "dashboard", "settings");
+          const docSnap = await getDoc(settingsDocRef);
+          if (docSnap.exists() && docSnap.data()?.quoteSection) {
+            reset(docSnap.data().quoteSection); // Set nilai default form
           }
-        } else {
-          navigate("/");
+        } catch (error) {
+          console.error("Error fetching quote data:", error);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-        navigate("/");
-      } finally {
+      };
+      fetchQuoteData();
+    } else if (!loading) {
         setIsLoading(false);
-      }
-    };
+    }
+  }, [user, loading, isGlobalAdmin, navigate, reset]);
 
-    checkAdminStatus();
-  }, [user, loading, navigate, reset]);
-
-  const onSubmit = async (data: WelcomeMessageFormData) => {
+  const onSubmit = async (data: QuoteSectionFormData) => {
     try {
       const settingsDocRef = doc(db, "dashboard", "settings");
-      await setDoc(settingsDocRef, { welcomeMessage: data }, { merge: true });
-      alert("Pesan sambutan berhasil diperbarui!");
+      // Gunakan setDoc dengan merge:true untuk hanya memperbarui field quoteSection
+      await setDoc(settingsDocRef, { quoteSection: data }, { merge: true });
+      alert("Bagian kutipan berhasil diperbarui!");
     } catch (error) {
-      console.error("Error updating welcome message:", error);
-      alert("Gagal memperbarui pesan sambutan.");
+      console.error("Error updating quote section:", error);
+      alert("Gagal memperbarui kutipan.");
     }
   };
 
-  if (isLoading) {
-    return <div>Memeriksa status admin...</div>;
+  if (loading || isLoading) {
+    return <div className="container mx-auto p-4">Memuat dasbor...</div>;
   }
 
-  if (!isAdmin) {
-    return null; // or a redirect component
+  if (!isGlobalAdmin) {
+    return null; // Pengguna akan diarahkan oleh useEffect
   }
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <h2 className="text-lg font-semibold mb-6">Atur Bagian Kutipan</h2>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-lg">
         <div>
-          <Label htmlFor="imageUrl">URL Gambar</Label>
-          <Input id="imageUrl" {...register("imageUrl")} />
-          {errors.imageUrl && <p className="text-red-500 text-sm">{errors.imageUrl.message}</p>}
+          <Label htmlFor="quote">Kutipan (Quote)</Label>
+          <Input id="quote" {...register("quote")} />
+          {errors.quote && <p className="text-red-500 text-sm mt-1">{errors.quote.message}</p>}
         </div>
         <div>
-          <Label htmlFor="title">Judul</Label>
-          <Input id="title" {...register("title")} />
-          {errors.title && <p className="text-red-500 text-sm">{errors.title.message}</p>}
+          <Label htmlFor="author">Author</Label>
+          <Input id="author" {...register("author")} />
+          {errors.author && <p className="text-red-500 text-sm mt-1">{errors.author.message}</p>}
         </div>
         <div>
-          <Label htmlFor="subtitle">Subjudul</Label>
-          <Input id="subtitle" {...register("subtitle")} />
-          {errors.subtitle && <p className="text-red-500 text-sm">{errors.subtitle.message}</p>}
+          <Label htmlFor="authorImageUrl">URL Gambar Author</Label>
+          <Input id="authorImageUrl" {...register("authorImageUrl")} />
+          {errors.authorImageUrl && <p className="text-red-500 text-sm mt-1">{errors.authorImageUrl.message}</p>}
         </div>
         <Button type="submit">Simpan Perubahan</Button>
       </form>

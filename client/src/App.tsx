@@ -43,10 +43,9 @@ function Router() {
 }
 
 import { AuthProvider } from "@/hooks/use-auth";
+import { isFirebaseConfigured } from "@/firebaseConfig";
 
 function App() {
-  const isFirebaseConfigured = import.meta.env.VITE_FIREBASE_API_KEY;
-
   if (!isFirebaseConfigured) {
     return (
       <div className="flex items-center justify-center min-h-screen">

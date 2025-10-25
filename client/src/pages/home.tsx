@@ -1,33 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-import { Clock, Flame, TrendingUp } from "lucide-react";
 import { doc, getDoc } from "firebase/firestore";
+import { Flame, TrendingUp, Clock } from "lucide-react";
 import { api, extractManhwaId } from "@/lib/api";
 import { db } from "@/firebaseConfig";
 import { ManhwaSlider } from "@/components/manhwa-slider";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
 import { SEO } from "@/components/seo";
 
-// Define the type for the welcome message
-interface WelcomeMessage {
-  imageUrl: string;
-  title: string;
-  subtitle: string;
+// Tipe data untuk quote section
+interface QuoteSectionData {
+  quote: string;
+  author: string;
+  authorImageUrl: string;
 }
 
-// Fetcher function for dashboard settings
-const fetchDashboardSettings = async () => {
+// Fungsi untuk mengambil data dari Firestore
+const fetchQuoteSectionData = async (): Promise<QuoteSectionData | null> => {
   const docRef = doc(db, "dashboard", "settings");
   const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return docSnap.data() as { welcomeMessage: WelcomeMessage; admins: string[] };
+  if (docSnap.exists() && docSnap.data()?.quoteSection) {
+    return docSnap.data().quoteSection as QuoteSectionData;
   }
   return null;
 };
 
 export default function Home() {
-  const { data: settings, isLoading: loadingSettings } = useQuery({
-    queryKey: ["dashboard-settings"],
-    queryFn: fetchDashboardSettings,
+  // Query untuk mengambil data quote
+  const { data: quoteData, isLoading: loadingQuote } = useQuery({
+    queryKey: ["quoteSection"],
+    queryFn: fetchQuoteSectionData,
   });
 
   const { data: recommendations, isLoading: loadingRec } = useQuery({
@@ -50,12 +51,6 @@ export default function Home() {
     queryFn: api.getManhwaTop,
   });
 
-  const welcomeMessage = settings?.welcomeMessage || {
-    imageUrl: "https://cdn.nefyu.my.id/030i.jpeg",
-    title: "Baca Komik Gak Ribet",
-    subtitle: "Dimana aja, Kapan aja",
-  };
-
   return (
     <div className="min-h-screen">
       <SEO
@@ -63,36 +58,39 @@ export default function Home() {
         description="Baca manhwa terbaru, populer, dan top rated gratis online. Nikmati koleksi lengkap manhwa berkualitas tinggi dengan update terbaru setiap hari."
       />
 
-      {/* Welcome Section */}
-      {loadingSettings ? (
-        <div className="relative h-72 md:h-96 rounded-lg bg-muted animate-pulse mb-12" />
-      ) : welcomeMessage ? (
-        <section className="relative h-72 md:h-96 rounded-lg overflow-hidden mb-12">
-          <img
-            src={welcomeMessage.imageUrl}
-            alt="Welcome Banner"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-          <div className="absolute bottom-0 left-0 p-6 md:p-8">
-            <h1 className="text-3xl md:text-5xl font-bold text-foreground">
-              {welcomeMessage.title}
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mt-2">
-              {welcomeMessage.subtitle}
-            </p>
-          </div>
-        </section>
-      ) : null}
-
       {/* Hero Slider */}
-      <section className="mb-12">
+      <section className="mb-8">
         {loadingRec ? (
           <div className="h-[400px] md:h-[500px] rounded-lg bg-muted animate-pulse" />
         ) : recommendations && recommendations.length > 0 ? (
           <ManhwaSlider manhwaList={recommendations} />
         ) : null}
       </section>
+
+      {/* Quote Section Implementation */}
+      <div className="container mx-auto max-w-7xl px-4">
+        {loadingQuote ? (
+          <div className="h-24 bg-muted rounded-lg animate-pulse mb-12" />
+        ) : quoteData ? (
+          <section className="mb-12">
+            <div className="bg-card text-card-foreground rounded-lg p-4 flex items-center gap-4 shadow-md">
+              <img
+                src={quoteData.authorImageUrl}
+                alt={quoteData.author}
+                className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+              />
+              <div className="flex-1">
+                <p className="italic text-foreground font-medium">
+                  "{quoteData.quote}"
+                </p>
+                <p className="text-sm text-muted-foreground mt-1 text-right w-full">
+                  - {quoteData.author}
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+      </div>
 
       <div className="container mx-auto max-w-7xl px-4 space-y-16">
         {/* Terbaru Section */}
