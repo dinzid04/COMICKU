@@ -3,6 +3,9 @@ import { Link } from "wouter";
 import { ChevronRight, Flame, TrendingUp, Clock } from "lucide-react";
 import { api, extractManhwaId } from "@/lib/api";
 import { ManhwaSlider } from "@/components/manhwa-slider";
+import { db } from "@/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { useState, useEffect } from "react";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/seo";
@@ -28,12 +31,65 @@ export default function Home() {
     queryFn: api.getManhwaTop,
   });
 
+  const [settings, setSettings] = useState({
+    quote: "",
+    author: "",
+    imageUrl: "",
+  });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const docRef = doc(db, "dashboard", "settings");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setSettings(docSnap.data() as any);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <div className="min-h-screen">
       <SEO
         title="Beranda - Baca Manhwa Gratis"
         description="Baca manhwa terbaru, populer, dan top rated gratis online. Nikmati koleksi lengkap manhwa berkualitas tinggi dengan update terbaru setiap hari."
       />
+
+      {/* Welcome Section */}
+      <section className="relative h-72 md:h-96 rounded-lg overflow-hidden mb-12">
+        <img
+          src="https://cdn.nefyu.my.id/030i.jpeg"
+          alt="Welcome"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute bottom-0 left-0 p-6 md:p-8">
+          <h1 className="text-3xl md:text-5xl font-bold text-foreground">
+            Baca Komik Gak Ribet
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground mt-2">
+            Nikmati semua komik dengan nyaman
+          </p>
+        </div>
+      </section>
+
+      {/* Quote Section */}
+      {settings.quote && (
+        <section className="text-center my-16">
+          <img
+            src={settings.imageUrl || "https://via.placeholder.com/150"}
+            alt={settings.author || "Author"}
+            className="w-24 h-24 rounded-full mx-auto mb-4"
+          />
+          <p className="text-xl md:text-2xl font-serif italic text-foreground max-w-3xl mx-auto">
+            "{settings.quote}"
+          </p>
+          <p className="text-lg text-muted-foreground mt-4 font-semibold">
+            - {settings.author}
+          </p>
+        </section>
+      )}
+
       {/* Hero Slider */}
       <section className="mb-12">
         {loadingRec ? (

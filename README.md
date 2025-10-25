@@ -9,6 +9,7 @@ Proyek ini telah diperbarui untuk menyertakan fitur-fitur berikut:
 *   **Autentikasi Pengguna**: Sistem login dan pendaftaran menggunakan Firebase Authentication.
 *   **Favorit**: Pengguna dapat menyimpan manhwa favorit mereka.
 *   **Riwayat Baca**: Aplikasi secara otomatis menyimpan chapter terakhir yang dibaca oleh pengguna.
+*   **Admin Dashboard**: Panel admin untuk mengelola konten di halaman utama.
 
 Untuk menjalankan fitur-fitur ini, Anda perlu membuat dan mengkonfigurasi proyek Firebase Anda sendiri.
 
@@ -61,16 +62,29 @@ service cloud.firestore {
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Dashboard settings can be read by anyone, but only written by admins
+    match /dashboard/settings {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/admins/uids).data.uids;
+    }
   }
 }
 ```
 
-3.  Klik **"Publish"** untuk menyimpan aturan baru. Aturan ini memastikan bahwa pengguna yang sudah login hanya dapat mengakses data mereka sendiri.
+3.  Klik **"Publish"** untuk menyimpan aturan baru.
 
-### Langkah 6: Masukkan Konfigurasi Firebase ke Aplikasi
+### Langkah 6: Konfigurasi Admin
 
-1.  Buka file `client/src/firebaseConfig.ts` di proyek ini.
-2.  Anda akan melihat objek `firebaseConfig` dengan nilai *placeholder*.
+1. Di Firestore, buat collection baru bernama `admins`.
+2. Di dalam collection `admins`, buat document baru bernama `uids`.
+3. Di dalam document `uids`, tambahkan field `uids` bertipe `array`.
+4. Tambahkan Firebase UID dari akun admin Anda ke dalam array `uids`.
+
+### Langkah 7: Masukkan Konfigurasi Firebase ke Aplikasi
+
+1.  Buat file `.env` di dalam folder `client`.
+2.  Salin isi dari `client/.env.example` ke `client/.env`.
 3.  Ganti nilai-nilai *placeholder* tersebut dengan objek `firebaseConfig` yang Anda salin dari Firebase pada **Langkah 2**.
 4.  Simpan file tersebut.
 

@@ -20,11 +20,13 @@ import FavoritesPage from "@/pages/favorites";
 import HistoryPage from "@/pages/history";
 import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
+import AdminDashboard from "@/pages/admin";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/admin" component={AdminDashboard} />
       <Route path="/login" component={AuthPage} />
       <Route path="/register" component={AuthPage} />
       <Route path="/profile" component={ProfilePage} />
