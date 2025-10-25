@@ -16,6 +16,8 @@ interface QuoteSectionData {
 
 // Fungsi untuk mengambil data dari Firestore
 const fetchQuoteSectionData = async (): Promise<QuoteSectionData | null> => {
+  // Jika db null (Firebase tidak terkonfigurasi), jangan lakukan apa-apa.
+  if (!db) return null;
   const docRef = doc(db, "dashboard", "settings");
   const docSnap = await getDoc(docRef);
   if (docSnap.exists() && docSnap.data()?.quoteSection) {
@@ -29,6 +31,7 @@ export default function Home() {
   const { data: quoteData, isLoading: loadingQuote } = useQuery({
     queryKey: ["quoteSection"],
     queryFn: fetchQuoteSectionData,
+    staleTime: 300000, // 5 menit
   });
 
   const { data: recommendations, isLoading: loadingRec } = useQuery({
@@ -129,6 +132,7 @@ export default function Home() {
           <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {loadingPopular
               ? Array.from({ length: 12 }).map((_, i) => <ManhwaCardSkeleton key={i} />)
+              // ... sisa kode tidak berubah
               : popularManhwa?.slice(0, 12).map((manhwa) => (
                   <ManhwaCard
                     key={manhwa.link}
