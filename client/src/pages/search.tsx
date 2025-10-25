@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Search as SearchIcon, AlertCircle } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, extractManhwaId } from "@/lib/api";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
 import { SEO } from "@/components/seo";
 
@@ -67,9 +67,9 @@ export default function SearchPage() {
           {data.seriesList.map((manhwa) => (
             <ManhwaCard
               key={manhwa.url}
+              id={extractManhwaId(manhwa.url)}
               title={manhwa.title}
               image={manhwa.image}
-              link={manhwa.url}
               rating={manhwa.rating}
               latestChapter={manhwa.latestChapter}
             />

@@ -1,23 +1,21 @@
 import { Link } from "wouter";
 import { Star, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { extractManhwaId } from "@/lib/api";
 
 interface ManhwaCardProps {
+  id: string;
   title: string;
   image: string;
-  link: string;
   rating?: string;
   chapter?: string;
   latestChapter?: string;
 }
 
-export function ManhwaCard({ title, image, link, rating, chapter, latestChapter }: ManhwaCardProps) {
-  const manhwaId = extractManhwaId(link);
+export function ManhwaCard({ id, title, image, rating, chapter, latestChapter }: ManhwaCardProps) {
   const displayChapter = chapter || latestChapter;
 
   return (
-    <Link href={`/manhwa/${manhwaId}?image=${encodeURIComponent(image)}`} data-testid={`card-manhwa-${manhwaId}`} className="group block">
+    <Link href={`/manhwa/${id}?image=${encodeURIComponent(image)}`} data-testid={`card-manhwa-${id}`} className="group block">
         <div className="relative aspect-[2/3] overflow-hidden rounded-lg shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:scale-105">
           {/* Image */}
           <img

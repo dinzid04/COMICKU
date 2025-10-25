@@ -73,7 +73,7 @@ const FavoritesPage: React.FC = () => {
           {favorites.map((fav) => (
             <ManhwaCard
               key={fav.id}
-              link={`/manhwa/${fav.id}`} // Pass the link prop
+              id={fav.id}
               title={fav.title}
               image={fav.image}
             />

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Search, BookOpen, Moon, Sun, Menu, X, Heart, History, LogOut, LogIn } from "lucide-react";
+import { Search, BookOpen, Moon, Sun, Menu, X, Heart, History, LogOut, LogIn, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/firebaseConfig";
@@ -75,17 +77,48 @@ export function Header() {
               Genre
             </Link>
             {user ? (
-              <>
-                <Link href="/favorites" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2">
-                  <Heart className="h-4 w-4" /> Favorit
-                </Link>
-                <Link href="/history" className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 hover-elevate active-elevate-2">
-                  <History className="h-4 w-4" /> Riwayat
-                </Link>
-                <Button variant="ghost" onClick={handleLogout} className="hover-elevate active-elevate-2">
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                      <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/profile">
+                    <DropdownMenuItem>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Profil</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/favorites">
+                    <DropdownMenuItem>
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>Favorit</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/history">
+                    <DropdownMenuItem>
+                      <History className="mr-2 h-4 w-4" />
+                      <span>Riwayat</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Keluar</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link href="/auth" data-testid="link-login">
                 <Button className="hover-elevate active-elevate-2">
@@ -143,6 +176,9 @@ export function Header() {
               </Link>
               {user ? (
                 <>
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
+                    <UserIcon className="mr-2 h-5 w-5" /> Profil
+                  </Link>
                   <Link href="/favorites" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
                     <Heart className="mr-2 h-5 w-5" /> Favorit
                   </Link>

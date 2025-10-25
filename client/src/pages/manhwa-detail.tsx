@@ -14,8 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ManhwaDetail() {
   const [, params] = useRoute("/manhwa/:id");
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.search);
+  const [, navigate] = useLocation();
+  const searchParams = new URLSearchParams(window.location.search);
   const fallbackImage = searchParams.get("image");
 
   const manhwaId = params?.id || "";
@@ -102,6 +102,18 @@ export default function ManhwaDetail() {
     : [];
 
   const firstChapterLink = sortedChapters.length > 0 ? sortedChapters[0].chapterLink : data.firstChapter?.link;
+
+  const handleChapterClick = (chapterLink: string) => {
+    if (!data) return;
+    const chapterId = extractChapterId(chapterLink);
+    navigate(`/chapter/${chapterId}`, {
+      state: {
+        manhwaId: manhwaId,
+        manhwaTitle: data.title,
+        manhwaImage: displayImage,
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen">
@@ -196,14 +208,14 @@ export default function ManhwaDetail() {
 
               {/* Read Button */}
               {firstChapterLink && (
-                <Link
-                  href={`/chapter/${extractChapterId(firstChapterLink)}`}
+                <Button
+                  onClick={() => handleChapterClick(firstChapterLink!)}
                   className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-10 px-8"
                   data-testid="button-read-first"
                 >
                   <Book className="h-5 w-5" />
                   Baca Chapter Pertama
-                </Link>
+                </Button>
               )}
               {user && (
                 <Button
@@ -228,20 +240,19 @@ export default function ManhwaDetail() {
           {sortedChapters.length > 0 ? (
             <div className="divide-y divide-border">
               {sortedChapters.map((chapter, index) => {
-                const chapterId = extractChapterId(chapter.chapterLink);
                 return (
-                  <Link
+                  <div
                     key={index}
-                    href={`/chapter/${chapterId}`}
-                    className="flex items-center justify-between p-4 hover-elevate active-elevate-2 transition-all"
-                    data-testid={`link-chapter-${chapterId}`}
+                    onClick={() => handleChapterClick(chapter.chapterLink)}
+                    className="flex items-center justify-between p-4 hover-elevate active-elevate-2 transition-all cursor-pointer"
+                    data-testid={`link-chapter-${extractChapterId(chapter.chapterLink)}`}
                   >
                     <div>
                       <h3 className="font-semibold">{chapter.chapterNum}</h3>
                       <p className="text-sm text-muted-foreground">{chapter.chapterDate}</p>
                     </div>
                     <ExternalLink className="h-5 w-5 text-muted-foreground" />
-                  </Link>
+                  </div>
                 );
               })}
             </div>

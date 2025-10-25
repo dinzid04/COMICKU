@@ -7,6 +7,7 @@ import { ManhwaCard } from '@/components/manhwa-card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { SEO } from '@/components/seo';
+import { Button } from '@/components/ui/button';
 
 interface HistoryItem {
   manhwaId: string;
@@ -76,7 +77,7 @@ const HistoryPage: React.FC = () => {
           {history.map((item) => (
             <div key={item.manhwaId}>
               <ManhwaCard
-                link={`/manhwa/${item.manhwaId}`}
+                id={item.manhwaId}
                 title={item.manhwaTitle}
                 image={item.manhwaImage}
                 chapter={item.lastChapterTitle}
