@@ -1,5 +1,5 @@
 import { Link, useRoute } from "wouter";
-import { Home, Tv, Heart, History, User } from "lucide-react";
+import { Home, Heart, History, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export function BottomNavbar() {
@@ -7,6 +7,9 @@ export function BottomNavbar() {
   const [isHomeActive] = useRoute("/");
   const [isFavoritesActive] = useRoute("/favorites");
   const [isHistoryActive] = useRoute("/history");
+  const [isProfileActive] = useRoute("/profile");
+
+  const profileLink = user ? "/profile" : "/login";
 
   return (
     <nav className="fixed bottom-0 z-50 w-full border-t border-border bg-background/80 backdrop-blur-xl md:hidden">
@@ -40,8 +43,10 @@ export function BottomNavbar() {
             <span className="text-xs">Riwayat</span>
           </Link>
           <Link
-            href="/auth"
-            className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors"
+            href={profileLink}
+            className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                isProfileActive ? "text-primary" : "text-muted-foreground"
+              }`}
           >
             <User className="h-5 w-5" />
             <span className="text-xs">{user ? "Akun" : "Login"}</span>

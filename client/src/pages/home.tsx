@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { ChevronRight, Flame, TrendingUp, Clock } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, extractManhwaId } from "@/lib/api";
 import { ManhwaSlider } from "@/components/manhwa-slider";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
 import { Button } from "@/components/ui/button";
@@ -59,9 +59,9 @@ export default function Home() {
               : newManhwa?.slice(0, 12).map((manhwa) => (
                   <ManhwaCard
                     key={manhwa.link}
+                    id={extractManhwaId(manhwa.link)}
                     title={manhwa.title}
                     image={manhwa.imageSrc || manhwa.imageUrl || ""}
-                    link={manhwa.link}
                     chapter={manhwa.chapters?.[0]?.chapterTitle}
                   />
                 ))}
@@ -83,9 +83,9 @@ export default function Home() {
               : popularManhwa?.slice(0, 12).map((manhwa) => (
                   <ManhwaCard
                     key={manhwa.link}
+                    id={extractManhwaId(manhwa.link)}
                     title={manhwa.title}
                     image={manhwa.imageSrc || manhwa.imageUrl || ""}
-                    link={manhwa.link}
                     rating={manhwa.rating}
                     chapter={manhwa.chapter}
                   />
@@ -108,9 +108,9 @@ export default function Home() {
               : topManhwa?.slice(0, 12).map((manhwa) => (
                   <ManhwaCard
                     key={manhwa.url}
+                    id={extractManhwaId(manhwa.url)}
                     title={manhwa.title}
                     image={manhwa.image}
-                    link={manhwa.url}
                     rating={manhwa.rating}
                   />
                 ))}

@@ -72,8 +72,18 @@ export const api = {
 
 // Helper to extract manhwa ID from URL
 export const extractManhwaId = (url: string): string => {
-  const match = url.match(/\/manga\/([^/]+)\/?$/);
-  return match ? match[1] : url;
+    try {
+        // Coba parsing sebagai URL lengkap
+        const urlObject = new URL(url);
+        const pathParts = urlObject.pathname.split('/').filter(part => part);
+        // Ambil bagian terakhir dari path, yang seharusnya menjadi ID/slug
+        return pathParts[pathParts.length - 1] || url;
+    } catch (error) {
+        // Jika gagal (misalnya, ini adalah path relatif seperti /manga/slug), lakukan parsing manual
+        const pathParts = url.split('/').filter(part => part);
+        // Ambil bagian terakhir dari path
+        return pathParts[pathParts.length - 1] || url;
+    }
 };
 
 // Helper to extract chapter ID from URL
