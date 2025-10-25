@@ -65,10 +65,13 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Anyone can read dashboard settings, only admins can write
+    // Dashboard settings can be read by anyone.
+    // They can be created by any authenticated user if they don't exist yet.
+    // They can only be updated by users whose UID is in the 'admins' array.
     match /dashboard/settings {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dashboard/settings).data.admins;
+      allow create: if request.auth != null && !exists(/databases/$(database)/documents/dashboard/settings);
+      allow update: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dashboard/settings).data.admins;
     }
   }
 }

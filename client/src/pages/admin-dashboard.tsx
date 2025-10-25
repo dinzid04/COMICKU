@@ -105,25 +105,13 @@ const AdminDashboard = () => {
     );
   }
 
-  if (isSettingUp) {
+  if (isSettingUp || (needsSetup && user)) {
     return (
-      <div className="container mx-auto p-4 flex flex-col items-center justify-center h-full">
+      <div className="container mx-auto p-4 flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Spinner size="large" />
-        <p className="mt-4 text-lg">Melakukan pengaturan awal...</p>
-      </div>
-    );
-  }
-
-  if (needsSetup) {
-    return (
-      <div className="container mx-auto p-4">
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>Pengaturan Diperlukan</AlertTitle>
-          <AlertDescription>
-            Selamat datang! Ini adalah pertama kalinya Anda menjalankan aplikasi. Pengaturan awal sedang diproses. Anda akan menjadi admin pertama secara otomatis.
-          </AlertDescription>
-        </Alert>
+        <p className="mt-4 text-lg text-muted-foreground">
+          Melakukan pengaturan awal, mohon tunggu...
+        </p>
       </div>
     );
   }

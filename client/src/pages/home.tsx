@@ -27,11 +27,19 @@ const fetchQuoteSectionData = async (): Promise<QuoteSectionData | null> => {
 };
 
 export default function Home() {
-  // Query untuk mengambil data quote
-  const { data: quoteData, isLoading: loadingQuote } = useQuery({
+  // Default data for the quote section
+  const defaultQuoteData: QuoteSectionData = {
+    quote: "Persahabatan itu adalah tempat saling berbagi rasa sakit.",
+    author: "Yoimiya",
+    authorImageUrl: "https://cdn.nefyu.my.id/030i.jpeg",
+  };
+
+  // Query untuk mengambil data quote, dengan data default sebagai placeholder
+  const { data: quoteData } = useQuery({
     queryKey: ["quoteSection"],
     queryFn: fetchQuoteSectionData,
     staleTime: 300000, // 5 menit
+    placeholderData: defaultQuoteData,
   });
 
   const { data: recommendations, isLoading: loadingRec } = useQuery({
@@ -72,28 +80,26 @@ export default function Home() {
 
       {/* Quote Section Implementation */}
       <div className="container mx-auto max-w-7xl px-4">
-        {loadingQuote ? (
-          <div className="h-24 bg-muted rounded-lg animate-pulse mb-12" />
-        ) : quoteData ? (
-          <section className="mb-12">
-            <div className="bg-card text-card-foreground rounded-lg p-4 flex items-center gap-4 shadow-md">
-              <img
-                src={quoteData.authorImageUrl}
-                alt={quoteData.author}
-                className="w-16 h-16 rounded-full object-cover border-2 border-primary"
-              />
-              <div className="flex-1">
-                <p className="italic text-foreground font-medium">
-                  "{quoteData.quote}"
-                </p>
-                <p className="text-sm text-muted-foreground mt-1 text-right w-full">
-                  - {quoteData.author}
-                </p>
-              </div>
-            </div>
-          </section>
-        ) : null}
-      </div>
+        {quoteData && (
+            <section className="mb-12">
+                <div className="bg-card text-card-foreground rounded-lg p-4 flex items-center gap-4 shadow-md">
+                    <img
+                        src={quoteData.authorImageUrl}
+                        alt={quoteData.author}
+                        className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                    />
+                    <div className="flex-1">
+                        <p className="italic text-foreground font-medium">
+                            "{quoteData.quote}"
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1 text-right w-full">
+                            - {quoteData.author}
+                        </p>
+                    </div>
+                </div>
+            </section>
+        )}
+    </div>
 
       <div className="container mx-auto max-w-7xl px-4 space-y-16">
         {/* Terbaru Section */}
