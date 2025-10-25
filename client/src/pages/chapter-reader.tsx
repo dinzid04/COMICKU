@@ -9,13 +9,32 @@ import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 
+interface ManhwaState {
+  manhwaId: string;
+  manhwaTitle: string;
+  manhwaImage: string;
+}
+
 export default function ChapterReader() {
   const [, params] = useRoute("/chapter/:id");
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const chapterId = params?.id || "";
   const [imageLoadErrors, setImageLoadErrors] = useState<Set<number>>(new Set());
-  const { manhwaId, manhwaTitle, manhwaImage } = (location.state as any) || {};
+  const [manhwaState, setManhwaState] = useState<ManhwaState | null>(null);
+
+  useEffect(() => {
+    const state = location.state as ManhwaState;
+    if (state?.manhwaId) {
+      sessionStorage.setItem('currentManhwa', JSON.stringify(state));
+      setManhwaState(state);
+    } else {
+      const storedState = sessionStorage.getItem('currentManhwa');
+      if (storedState) {
+        setManhwaState(JSON.parse(storedState));
+      }
+    }
+  }, [location.state]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["/api/chapter", chapterId],
@@ -27,14 +46,14 @@ export default function ChapterReader() {
   useEffect(() => {
     window.scrollTo(0, 0);
 
-    if (user && manhwaId && manhwaImage && manhwaTitle && data?.title) {
+    if (user && manhwaState && data?.title) {
       const saveHistory = async () => {
-        const historyRef = doc(db, "users", user.uid, "history", manhwaId);
+        const historyRef = doc(db, "users", user.uid, "history", manhwaState.manhwaId);
         try {
           await setDoc(historyRef, {
-            manhwaId: manhwaId,
-            manhwaTitle: manhwaTitle,
-            manhwaImage: manhwaImage,
+            manhwaId: manhwaState.manhwaId,
+            manhwaTitle: manhwaState.manhwaTitle,
+            manhwaImage: manhwaState.manhwaImage,
             lastChapterId: chapterId,
             lastChapterTitle: data.title,
             readAt: new Date(),
@@ -45,7 +64,7 @@ export default function ChapterReader() {
       };
       saveHistory();
     }
-  }, [chapterId, user, data, manhwaId, manhwaTitle, manhwaImage]);
+  }, [chapterId, user, data, manhwaState]);
 
   const handleImageError = (index: number) => {
     setImageLoadErrors(prev => new Set(prev).add(index));
@@ -54,14 +73,14 @@ export default function ChapterReader() {
   const handlePrevChapter = () => {
     if (data?.prevChapter) {
       const prevId = extractChapterId(data.prevChapter);
-      navigate(`/chapter/${prevId}`, { state: { manhwaId, manhwaTitle, manhwaImage } });
+      navigate(`/chapter/${prevId}`, { state: manhwaState });
     }
   };
 
   const handleNextChapter = () => {
     if (data?.nextChapter) {
       const nextId = extractChapterId(data.nextChapter);
-      navigate(`/chapter/${nextId}`, { state: { manhwaId, manhwaTitle, manhwaImage } });
+      navigate(`/chapter/${nextId}`, { state: manhwaState });
     }
   };
 

@@ -9,20 +9,26 @@ import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/firebaseConfig";
 import { signOut } from "firebase/auth";
+import { getSearchHistory, addSearchHistory, removeSearchHistory } from "@/lib/search-history";
 
 export function Header() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [, navigate] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search/${encodeURIComponent(searchQuery)}`);
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery) {
+      addSearchHistory(trimmedQuery);
+      navigate(`/search/${encodeURIComponent(trimmedQuery)}`);
       setSearchQuery("");
       setMobileMenuOpen(false);
+      setIsSearchFocused(false);
     }
   };
 
@@ -53,19 +59,57 @@ export function Header() {
           </Link>
 
           {/* Desktop Search */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Cari manhwa..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-full pl-9 pr-4"
-                data-testid="input-search"
-              />
-            </div>
-          </form>
+          <div className="hidden md:flex flex-1 max-w-md relative">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Cari manhwa..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    setSearchHistory(getSearchHistory());
+                    setIsSearchFocused(true);
+                  }}
+                  onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                  className="w-full rounded-full pl-9 pr-4"
+                  data-testid="input-search"
+                />
+              </div>
+            </form>
+            {isSearchFocused && searchHistory.length > 0 && (
+              <div className="absolute top-12 w-full bg-background border border-border rounded-md shadow-lg z-50" data-testid="search-history-dropdown">
+                <div className="p-2">
+                  <h4 className="text-sm font-semibold text-muted-foreground px-2 pb-1">Riwayat Pencarian</h4>
+                  {searchHistory.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 hover:bg-accent rounded-md text-sm cursor-pointer"
+                      onClick={() => {
+                        setSearchQuery(item);
+                        handleSearch({ preventDefault: () => {} } as React.FormEvent);
+                      }}
+                    >
+                      <span>{item}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSearchHistory(item);
+                          setSearchHistory(getSearchHistory());
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-2">
@@ -94,24 +138,18 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href="/profile">
-                    <DropdownMenuItem>
-                      <UserIcon className="mr-2 h-4 w-4" />
-                      <span>Profil</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/favorites">
-                    <DropdownMenuItem>
-                      <Heart className="mr-2 h-4 w-4" />
-                      <span>Favorit</span>
-                    </DropdownMenuItem>
-                  </Link>
-                  <Link href="/history">
-                    <DropdownMenuItem>
-                      <History className="mr-2 h-4 w-4" />
-                      <span>Riwayat</span>
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    <span>Profil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>Favorit</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/history')}>
+                    <History className="mr-2 h-4 w-4" />
+                    <span>Riwayat</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -152,19 +190,57 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="border-t border-border bg-background p-4 md:hidden">
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Cari manhwa..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-full pl-9"
-                  data-testid="input-search-mobile"
-                />
-              </div>
-            </form>
+            <div className="relative mb-4">
+              <form onSubmit={handleSearch}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Cari manhwa..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => {
+                      setSearchHistory(getSearchHistory());
+                      setIsSearchFocused(true);
+                    }}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                    className="w-full rounded-full pl-9"
+                    data-testid="input-search-mobile"
+                  />
+                </div>
+              </form>
+              {isSearchFocused && searchHistory.length > 0 && (
+                <div className="absolute top-12 w-full bg-background border border-border rounded-md shadow-lg z-50" data-testid="search-history-dropdown-mobile">
+                  <div className="p-2">
+                    <h4 className="text-sm font-semibold text-muted-foreground px-2 pb-1">Riwayat Pencarian</h4>
+                    {searchHistory.map((item, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 hover:bg-accent rounded-md text-sm cursor-pointer"
+                        onClick={() => {
+                          setSearchQuery(item);
+                          handleSearch({ preventDefault: () => {} } as React.FormEvent);
+                        }}
+                      >
+                        <span>{item}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeSearchHistory(item);
+                            setSearchHistory(getSearchHistory());
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="flex flex-col gap-2">
               <Link
                 href="/genres"
