@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import { firestore } from '@/firebaseConfig';
 import type {
   ManhwaListItem,
   ManhwaTopItem,
@@ -86,12 +86,12 @@ export const extractChapterId = (url: string): string => {
 
 // Firestore functions for dashboard settings
 export const saveDashboardSettings = async (imageUrl: string, welcomeMessage: string) => {
-  const docRef = doc(db, 'dashboard', 'settings');
+  const docRef = doc(firestore, 'dashboard', 'settings');
   await setDoc(docRef, { imageUrl, welcomeMessage });
 };
 
 export const getDashboardSettings = async () => {
-  const docRef = doc(db, 'dashboard', 'settings');
+  const docRef = doc(firestore, 'dashboard', 'settings');
   const docSnap = await getDoc(docRef);
   if (docSnap.exists()) {
     return docSnap.data();
