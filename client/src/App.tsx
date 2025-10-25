@@ -45,6 +45,38 @@ function Router() {
 import { AuthProvider } from "@/hooks/use-auth";
 
 function App() {
+  const isFirebaseConfigured = import.meta.env.VITE_FIREBASE_API_KEY;
+
+  if (!isFirebaseConfigured) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-card text-card-foreground rounded-lg shadow-lg max-w-md">
+          <h1 className="text-2xl font-bold text-destructive mb-4">
+            Firebase Configuration Missing
+          </h1>
+          <p>
+            Please set up your Firebase environment variables. Create a{" "}
+            <code className="bg-muted text-muted-foreground p-1 rounded">
+              .env
+            </code>{" "}
+            file in the{" "}
+            <code className="bg-muted text-muted-foreground p-1 rounded">
+              client
+            </code>{" "}
+            directory and add your Firebase project configuration.
+          </p>
+          <p className="mt-4">
+            You can find the required variables in the{" "}
+            <code className="bg-muted text-muted-foreground p-1 rounded">
+              .env.example
+            </code>{" "}
+            file.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system" storageKey="manhwaku-theme">
