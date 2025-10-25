@@ -81,15 +81,15 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-                      <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={user.photoURL || undefined} alt={user.nickname || user.displayName || 'User'} />
+                      <AvatarFallback>{user.nickname?.charAt(0) || user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                      <p className="text-sm font-medium leading-none">{user.nickname || user.displayName}</p>
                       <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
@@ -120,7 +120,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/auth" data-testid="link-login">
+              <Link href="/login" data-testid="link-login">
                 <Button className="hover-elevate active-elevate-2">
                   <LogIn className="mr-2 h-4 w-4" /> Login
                 </Button>
@@ -211,7 +211,7 @@ export function Header() {
                   <LogOut className="mr-2 h-5 w-5" /> Logout
                 </Button>
               ) : (
-                <Link href="/auth" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex items-center justify-start gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-primary text-primary-foreground shadow hover:bg-primary/90 min-h-8 px-3 py-2 w-full hover-elevate active-elevate-2">
                   <LogIn className="mr-2 h-5 w-5" /> Login
                 </Link>
               )}
