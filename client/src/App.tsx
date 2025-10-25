@@ -24,29 +24,29 @@ import SignUp from "@/pages/signup";
 import AdminDashboard from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
-function Router({ setHeaderData }: { setHeaderData: (data: any) => void }) {
-  return (
-    <Switch>
-      <Route path="/">
-        <Home setHeaderData={setHeaderData} />
-      </Route>
-      <Route path="/search/:query" component={SearchPage} />
-      <Route path="/genres" component={GenresPage} />
-      <Route path="/genre/:id" component={GenreDetail} />
-      <Route path="/manhwa/:id" component={ManhwaDetail} />
-      <Route path="/chapter/:id" component={ChapterReader} />
-      <Route path="/history" component={History} />
-      <Route path="/favorites" component={Favorites} />
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={SignUp} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "@/firebaseConfig";
+import { useEffect } from "react";
+
+// ... (imports lainnya tetap sama)
 
 function App() {
-  const [headerData, setHeaderData] = useState(null);
+  const [headerData, setHeaderData] = useState<{ imageUrl: string; welcomeMessage: string } | null>(null);
+
+  useEffect(() => {
+    const fetchHeaderData = async () => {
+      try {
+        const docRef = doc(firestore, "dashboard", "settings");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setHeaderData(docSnap.data() as { imageUrl: string; welcomeMessage: string });
+        }
+      } catch (error) {
+        console.error("Error fetching header data:", error);
+      }
+    };
+    fetchHeaderData();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -54,9 +54,22 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <div className="flex flex-col min-h-screen">
-              <Header headerData={headerData} />
+              <Header avatarUrl={headerData?.imageUrl} welcomeMessage={headerData?.welcomeMessage} />
               <main className="flex-1 pb-16 md:pb-0">
-                <Router setHeaderData={setHeaderData} />
+                <Switch>
+                  <Route path="/" component={Home} />
+                  <Route path="/search/:query" component={SearchPage} />
+                  <Route path="/genres" component={GenresPage} />
+                  <Route path="/genre/:id" component={GenreDetail} />
+                  <Route path="/manhwa/:id" component={ManhwaDetail} />
+                  <Route path="/chapter/:id" component={ChapterReader} />
+                  <Route path="/history" component={History} />
+                  <Route path="/favorites" component={Favorites} />
+                  <Route path="/login" component={Login} />
+                  <Route path="/signup" component={SignUp} />
+                  <Route path="/admin" component={AdminDashboard} />
+                  <Route component={NotFound} />
+                </Switch>
               </main>
               <Footer />
               <BottomNavbar />

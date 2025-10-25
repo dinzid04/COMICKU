@@ -8,7 +8,12 @@ import { useAuth } from "@/hooks/authProvider";
 import { signOut } from "firebase/auth";
 import { auth } from "@/firebaseConfig";
 
-export function Header({ headerData }: { headerData: any }) {
+interface HeaderProps {
+  imageUrl?: string;
+  welcomeMessage?: string;
+}
+
+export function Header({ imageUrl, welcomeMessage }: HeaderProps) {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [, navigate] = useLocation();
@@ -37,24 +42,29 @@ export function Header({ headerData }: { headerData: any }) {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto max-w-7xl">
         <div className="flex h-16 items-center justify-between gap-4 px-4">
-          {/* Logo */}
-          {headerData ? (
-            <div className="flex items-center gap-2">
-              <img src={headerData.imageUrl} alt="Profile" className="h-10 w-10 rounded-full" />
-              <span className="font-semibold">{headerData.welcomeMessage}</span>
-            </div>
-          ) : (
-            <Link
-              href="/"
-              data-testid="link-home"
-              className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-lg px-3 py-2 transition-all"
-            >
-              <BookOpen className="h-6 w-6 text-primary" />
-              <span className="font-display text-xl font-bold tracking-tight">
-                COMIC KU
-              </span>
-            </Link>
-          )}
+          {/* Logo / Welcome Message */}
+          <div className="flex items-center gap-2">
+            {imageUrl && welcomeMessage ? (
+              <div className="flex items-center gap-3">
+                <img src={imageUrl} alt="Avatar" className="h-10 w-10 rounded-full object-cover" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Selamat Datang Kembali,</p>
+                  <p className="font-bold leading-tight text-sm">{welcomeMessage}</p>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/"
+                data-testid="link-home"
+                className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-lg px-3 py-2 transition-all"
+              >
+                <BookOpen className="h-6 w-6 text-primary" />
+                <span className="font-display text-xl font-bold tracking-tight">
+                  COMIC KU
+                </span>
+              </Link>
+            )}
+          </div>
 
           {/* Desktop Search */}
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-md">
