@@ -87,3 +87,53 @@ export const db = getFirestore(app);
 **Penting:** Pastikan untuk mengganti semua nilai di dalam objek `firebaseConfig` dengan nilai yang sebenarnya dari proyek Firebase Anda.
 
 Setelah Anda menyelesaikan semua langkah ini, aplikasi akan siap untuk menggunakan fitur-fitur yang memerlukan Firebase.
+
+## Admin Dashboard Setup
+
+Fitur dasbor admin memungkinkan Anda untuk mengubah gambar profil dan pesan selamat datang yang ditampilkan di header halaman utama.
+
+### Langkah 1: Dapatkan UID Admin Anda
+
+1.  Buka **Firebase Console** dan navigasikan ke proyek Anda.
+2.  Di menu **Build**, klik **Authentication**.
+3.  Di tab **Users**, Anda akan melihat daftar semua pengguna terdaftar. Salin **UID** dari akun yang ingin Anda jadikan admin.
+
+### Langkah 2: Konfigurasikan UID Admin di Aplikasi
+
+1.  Buka file `client/src/hooks/authProvider.tsx`.
+2.  Temukan konstanta `ADMIN_UIDS` dan ganti placeholder dengan UID yang Anda salin dari Firebase Console. Anda dapat menambahkan beberapa UID jika diperlukan.
+
+```typescript
+// Ganti dengan UID admin Anda yang sebenarnya
+const ADMIN_UIDS = ['YOUR_ADMIN_UID_HERE', 'ANOTHER_ADMIN_UID_IF_NEEDED'];
+```
+
+### Langkah 3: Perbarui Aturan Keamanan Firestore
+
+Aturan keamanan Firestore perlu diperbarui untuk mengizinkan siapa saja membaca pengaturan dasbor, tetapi hanya admin yang dapat menulisnya.
+
+1.  Buka **Firebase Console > Build > Firestore Database**.
+2.  Klik tab **Rules**.
+3.  Ganti aturan yang ada dengan yang berikut ini. **Jangan lupa untuk memasukkan UID admin Anda di bagian `allow write`**.
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pengguna hanya dapat membaca dan menulis data mereka sendiri
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Siapa saja dapat membaca pengaturan dasbor, tetapi hanya admin yang dapat menulis
+    match /dashboard/settings {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid in ['YOUR_ADMIN_UID_HERE'];
+    }
+  }
+}
+```
+
+4.  Klik **Publish** untuk menyimpan aturan baru Anda.
+
+Setelah langkah-langkah ini selesai, pengguna admin yang masuk akan dapat mengakses `/admin` untuk mengelola pengaturan header.

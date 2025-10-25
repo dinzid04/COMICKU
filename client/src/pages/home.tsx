@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ChevronRight, Flame, TrendingUp, Clock } from "lucide-react";
-import { api } from "@/lib/api";
+import { api, getDashboardSettings } from "@/lib/api";
 import { ManhwaSlider } from "@/components/manhwa-slider";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/seo";
 
-export default function Home() {
+export default function Home({ setHeaderData }: { setHeaderData: (data: any) => void }) {
   const { data: recommendations, isLoading: loadingRec } = useQuery({
     queryKey: ["/api/manhwa-recommendation"],
     queryFn: api.getManhwaRecommendation,
@@ -27,6 +28,16 @@ export default function Home() {
     queryKey: ["/api/manhwa-top"],
     queryFn: api.getManhwaTop,
   });
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const settings = await getDashboardSettings();
+      if (settings) {
+        setHeaderData(settings);
+      }
+    };
+    fetchSettings();
+  }, [setHeaderData]);
 
   return (
     <div className="min-h-screen">
