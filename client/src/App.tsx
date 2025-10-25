@@ -20,7 +20,7 @@ import FavoritesPage from "@/pages/favorites";
 import HistoryPage from "@/pages/history";
 import ProfilePage from "@/pages/profile";
 import NotFound from "@/pages/not-found";
-import AdminDashboard from "@/pages/admin";
+import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
   return (

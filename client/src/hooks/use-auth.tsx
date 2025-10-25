@@ -28,11 +28,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const adminDocRef = doc(db, 'admins', 'uids');
-        const adminDocSnap = await getDoc(adminDocRef);
-        if (adminDocSnap.exists()) {
-          const adminUids = adminDocSnap.data().uids;
-          setIsAdmin(adminUids.includes(currentUser.uid));
+        const settingsDocRef = doc(db, 'dashboard', 'settings');
+        const settingsDocSnap = await getDoc(settingsDocRef);
+        if (settingsDocSnap.exists()) {
+          const admins = settingsDocSnap.data()?.admins || [];
+          setIsAdmin(admins.includes(currentUser.uid));
         } else {
           setIsAdmin(false);
         }

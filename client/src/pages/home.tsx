@@ -1,16 +1,35 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { ChevronRight, Flame, TrendingUp, Clock } from "lucide-react";
-import { api, extractManhwaId } from "@/lib/api";
-import { ManhwaSlider } from "@/components/manhwa-slider";
-import { db } from "@/firebaseConfig";
+import { Clock, Flame, TrendingUp } from "lucide-react";
 import { doc, getDoc } from "firebase/firestore";
-import { useState, useEffect } from "react";
+import { api, extractManhwaId } from "@/lib/api";
+import { db } from "@/firebaseConfig";
+import { ManhwaSlider } from "@/components/manhwa-slider";
 import { ManhwaCard, ManhwaCardSkeleton } from "@/components/manhwa-card";
-import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/seo";
 
+// Define the type for the welcome message
+interface WelcomeMessage {
+  imageUrl: string;
+  title: string;
+  subtitle: string;
+}
+
+// Fetcher function for dashboard settings
+const fetchDashboardSettings = async () => {
+  const docRef = doc(db, "dashboard", "settings");
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as { welcomeMessage: WelcomeMessage; admins: string[] };
+  }
+  return null;
+};
+
 export default function Home() {
+  const { data: settings, isLoading: loadingSettings } = useQuery({
+    queryKey: ["dashboard-settings"],
+    queryFn: fetchDashboardSettings,
+  });
+
   const { data: recommendations, isLoading: loadingRec } = useQuery({
     queryKey: ["/api/manhwa-recommendation"],
     queryFn: api.getManhwaRecommendation,
@@ -31,22 +50,11 @@ export default function Home() {
     queryFn: api.getManhwaTop,
   });
 
-  const [settings, setSettings] = useState({
-    quote: "",
-    author: "",
-    imageUrl: "",
-  });
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      const docRef = doc(db, "dashboard", "settings");
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setSettings(docSnap.data() as any);
-      }
-    };
-    fetchSettings();
-  }, []);
+  const welcomeMessage = settings?.welcomeMessage || {
+    imageUrl: "https://cdn.nefyu.my.id/030i.jpeg",
+    title: "Baca Komik Gak Ribet",
+    subtitle: "Dimana aja, Kapan aja",
+  };
 
   return (
     <div className="min-h-screen">
@@ -56,45 +64,26 @@ export default function Home() {
       />
 
       {/* Welcome Section */}
-      <section className="relative h-72 md:h-96 rounded-lg overflow-hidden mb-12">
-        <img
-          src="https://cdn.nefyu.my.id/030i.jpeg"
-          alt="Welcome"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-        <div className="absolute bottom-0 left-0 p-6 md:p-8">
-          <h1 className="text-3xl md:text-5xl font-bold text-foreground">
-            Baca Komik Gak Ribet
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mt-2">
-            Nikmati semua komik dengan nyaman
-          </p>
-        </div>
-      </section>
-
-      {/* Quote Section */}
-      {settings.quote && (
-        <section className="my-8">
-            <div className="container mx-auto max-w-7xl px-4">
-                <div className="bg-card text-card-foreground rounded-lg p-4 flex items-center gap-4">
-                    <img
-                        src={settings.imageUrl || "https://via.placeholder.com/150"}
-                        alt={settings.author || "Author"}
-                        className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-                    />
-                    <div>
-                        <p className="italic text-foreground">
-                            "{settings.quote}"
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            - {settings.author}
-                        </p>
-                    </div>
-                </div>
-            </div>
+      {loadingSettings ? (
+        <div className="relative h-72 md:h-96 rounded-lg bg-muted animate-pulse mb-12" />
+      ) : welcomeMessage ? (
+        <section className="relative h-72 md:h-96 rounded-lg overflow-hidden mb-12">
+          <img
+            src={welcomeMessage.imageUrl}
+            alt="Welcome Banner"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute bottom-0 left-0 p-6 md:p-8">
+            <h1 className="text-3xl md:text-5xl font-bold text-foreground">
+              {welcomeMessage.title}
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground mt-2">
+              {welcomeMessage.subtitle}
+            </p>
+          </div>
         </section>
-      )}
+      ) : null}
 
       {/* Hero Slider */}
       <section className="mb-12">
